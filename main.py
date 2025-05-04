@@ -81,4 +81,31 @@ async def menu(ctx, location: str, meal: str):
         embed.add_field(name=stall[0], value= items)
     await ctx.followup.send(embed = embed)
 
+@bot.command(name="cams", guild_ids = [585594090863853588])
+@discord.option("location", choices = ["aerial", "plaza", "midcampus", "walker", "east", "collegeave", "bridge", "portagewest","portageeast",])
+async def cams(ctx, location: str):
+
+    match location:
+        case "aerial":
+            locationWeb = "campus-aerial"
+        case "plaza":
+            locationWeb = "husky-plaza"
+        case "midcampus":
+            locationWeb = "mid-campus"
+        case "walker":
+            locationWeb = "walker-lawn"
+        case "east":
+            locationWeb = "east-hall-construction"
+        case "collegeave":
+            locationWeb = "college-avenue-view"
+        case "bridge":
+            locationWeb = "lift-bridge"
+        case "portagewest":
+            locationWeb = "keweenaw-waterway-west-via-glrc"
+        case "portageeast":
+            locationWeb = "keweenaw-waterway-east-via-glrc"
+        case _:
+            locationWeb = "campus-aerial"
+    await ctx.respond(f"https://www.mtu.edu/mtu_resources/php/webcams/cache/{locationWeb}.jpg")
+
 bot.run(os.getenv("TOKEN"))
