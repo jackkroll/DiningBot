@@ -5,7 +5,7 @@ dotenv.load_dotenv()
 bot = discord.Bot()
 
 locations = {"Wads" :"64b9990ec625af0685fb939d", "McNair":"64a6b628351d5305dde2bc08", "DHH" :"64e3da15e45d430b80c9b981"}
-bloat = ["Salad Bar", "Made to Order Deli", "Rice It Up", "Deli"]
+bloat = ["Salad Bar", "Made to Order Deli", "Rice It Up", "Deli", "Salad"]
 scraper = cloudscraper.create_scraper()
 ua = UserAgent()
 
@@ -22,15 +22,27 @@ class Location:
         self.locationName = locationName
         self.locationKey = locationKey
         self.periods = []
+        self.closed = False
         self.updatePeriods()
 
     def updatePeriods(self):
         date_today = datetime.now(timezone(timedelta(hours=-4))).strftime('%Y-%m-%d')
         info = make_scraper_request(
             f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods?platform=0&date={date_today}").json()
-        for period in info["periods"]:
-            newPeriod = Period(period["name"], period["id"])
-            self.periods.append(newPeriod)
+        try:
+            for period in info["periods"]:
+                newPeriod = Period(period["name"], period["id"])
+                self.periods.append(newPeriod)
+        except KeyError:
+            self.closed = True
+
+    def fetchMealPeriodIndex(self, periodName):
+        index = 0
+        for meal in self.periods:
+            if meal.periodName.lower() == periodName.lower():
+                return index
+            index += 1
+        return -1
 
     def fetchPeriod(self, index):
         date_today = datetime.now(timezone(timedelta(hours=-4))).strftime('%Y-%m-%d')
@@ -50,8 +62,6 @@ class Location:
 
 def make_scraper_request(url):
     headers = {"User-Agent" : ua.random}
-
-    #https://api.dineoncampus.com/v1/location/{location}/periods?={}platform=0&date=2025-4-6
     response = scraper.get(url, headers=headers)
     return response
 
@@ -64,14 +74,12 @@ async def menu(ctx, location: str, meal: str):
         title = f"{meal} at {location}"
     )
     embed.color = discord.Color.from_rgb(255,205,0)
-    match meal:
-        case "Breakfast":
-            index = 0
-        case "Lunch":
-             index = 1
-        case "Dinner":
-            index = 2
-    stalls = Location(locationName= location, locationKey=locations.get(location)).fetchItemsInPeriod(index)
+    location = Location(locationName=location, locationKey=locations.get(location))
+    if location.closed:
+        await ctx.followup(location + " is closed.")
+        return
+    mealIndex = location.fetchMealPeriodIndex(meal)
+    stalls = location.fetchItemsInPeriod(mealIndex)
     for stall in stalls:
         if stall[0] in bloat or len(stall[1]) == 0:
             continue

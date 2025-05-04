@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="931c5c4e-029b-49c6-946b-af4e0b2a322b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/DiningBot.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/DiningBot.iml" afterDir="false" />
+    <list default="true" id="931c5c4e-029b-49c6-946b-af4e0b2a322b" name="Changes" comment="Added camera support, untested">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -95,14 +94,38 @@
       <option name="presentableId" value="Default" />
       <updated>1737073513487</updated>
       <workItem from="1746395430708" duration="523000" />
-      <workItem from="1746397949830" duration="745000" />
+      <workItem from="1746397949830" duration="1805000" />
     </task>
+    <task id="LOCAL-00001" summary="Added camera support, untested">
+      <option name="closed" value="true" />
+      <created>1746401381524</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1746401381524</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Added camera support, untested" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added camera support, untested" />
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/DiningBot$main.coverage" NAME="main Coverage Results" MODIFIED="1746400422046" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DiningBot$main.coverage" NAME="main Coverage Results" MODIFIED="1746400929162" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
