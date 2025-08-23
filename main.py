@@ -1,3 +1,6 @@
+import asyncio
+from operator import truediv
+
 import cloudscraper,dotenv,os, discord
 from datetime import datetime, timezone, timedelta
 from fake_useragent import UserAgent
@@ -28,12 +31,15 @@ class Location:
     def updatePeriods(self):
         date_today = datetime.now(timezone(timedelta(hours=-4))).strftime('%Y-%m-%d')
         info = make_scraper_request(
-            f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods?platform=0&date={date_today}").json()
+            f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods?platform=0&date={date_today}")
+        info = info.json()
         try:
             for period in info["periods"]:
                 newPeriod = Period(period["name"], period["id"])
                 self.periods.append(newPeriod)
         except KeyError:
+            self.closed = True
+        if len(self.periods) == 0:
             self.closed = True
 
     def fetchMealPeriodIndex(self, periodName):
@@ -47,8 +53,9 @@ class Location:
     def fetchPeriod(self, index):
         date_today = datetime.now(timezone(timedelta(hours=-4))).strftime('%Y-%m-%d')
         info = make_scraper_request(
-            f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods/{self.periods[index].fetchPeriodKey()}?platform=0&date={date_today}").json()
+                f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods/{self.periods[index].fetchPeriodKey()}?platform=0&date={date_today}").json()
         return info
+
     def fetchItemsInPeriod(self, index):
         menu = self.fetchPeriod(index)
         stalls = []
@@ -60,23 +67,111 @@ class Location:
             stalls.append((stallName, items))
         return stalls
 
+
 def make_scraper_request(url):
     headers = {"User-Agent" : ua.random}
     response = scraper.get(url, headers=headers)
     return response
 
+@bot.command(name = "open", guild_ids = [585594090863853588])
+async def allOpenLocations(ctx):
+    await ctx.response.defer()
+    diningLocations = []
+    for dining_hall in locations.keys():
+        diningLocations.append(Location(locationName=dining_hall, locationKey=locations.get(dining_hall)))
+    message = ""
+    allOpen = True
+    for location in diningLocations:
+        if location.closed:
+            allOpen = False
+            message += f"**{location.locationName}** is currently **closed** ❌\n"
+        else:
+            message += f"**{location.locationName}** is currently **open** ✅\n"
+    if allOpen:
+        message = f"All locations are currently **open**"
+    await ctx.followup.send(message)
+
+async def postMenuAtTime(meal):
+    embeds = []
+    for dining_hall in locations.keys():
+        print(dining_hall)
+        embed = discord.Embed(
+            title=f"{meal} at {dining_hall}"
+        )
+
+        embed.color = discord.Color.from_rgb(255, 205, 0)
+        location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
+        if location.closed:
+            embed.add_field(name="**Closed**", value=f"Not open for {meal} today")
+            embed.color = discord.Color.red()
+            embeds.append(embed)
+            await asyncio.sleep(5)
+            continue
+        mealIndex = location.fetchMealPeriodIndex(meal)
+        stalls = location.fetchItemsInPeriod(mealIndex)
+        for stall in stalls:
+            if stall[0] in bloat or len(stall[1]) == 0:
+                continue
+            items = ""
+            for item in stall[1]:
+                items += f"- {item}\n"
+            embed.add_field(name=stall[0], value=items)
+        embeds.append(embed)
+        await asyncio.sleep(5)
+
+    await bot.wait_until_ready()
+    channel = bot.get_guild(585594090863853588).get_channel(868283438292152372)
+    await channel.send(embeds=embeds)
+
+async def sendFamilyDinnerPoll():
+    poll = discord.Poll("Family Dinner?", duration=6)
+    diningLocations = []
+    embeds = []
+    #await bot.fetch_guild(585594090863853588)
+    await bot.wait_until_ready()
+    channel = bot.get_guild(585594090863853588).get_channel(868283438292152372)
+
+    for dining_hall in locations.keys():
+        location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
+        if not location.closed:
+            for period in location.periods:
+                if period.periodName == "Dinner":
+                    diningLocations.append(location)
+                    embed = discord.Embed(
+                        title=f"{dining_hall}"
+                    )
+                    embed.color = discord.Color.from_rgb(255, 205, 0)
+                    mealIndex = location.fetchMealPeriodIndex("Dinner")
+                    stalls = location.fetchItemsInPeriod(mealIndex)
+                    for stall in stalls:
+                        if stall[0] in bloat or len(stall[1]) == 0:
+                            continue
+                        items = ""
+                        for item in stall[1]:
+                            items += f"- {item}\n"
+                        embed.add_field(name=stall[0], value=items)
+                    embeds.append(embed)
+    if len(diningLocations) == 0:
+        await channel.send("No locations are currently open for dinner")
+        return
+    for location in diningLocations:
+        poll.add_answer(text=location.locationName)
+    poll.add_answer(text="I'm busy :(")
+
+    await channel.send(embeds=embeds, poll=poll)
+
 @bot.command(name= "menu", guild_ids = [585594090863853588])
-@discord.option("location", choices = ["Wads", "McNair", "DHH"])
+@discord.option("dining_hall", choices = ["Wads", "McNair", "DHH"])
 @discord.option("meal", choices = ["Breakfast", "Lunch", "Dinner"])
-async def menu(ctx, location: str, meal: str):
+async def menu(ctx, dining_hall: str, meal: str):
     await ctx.response.defer()
     embed = discord.Embed(
-        title = f"{meal} at {location}"
+        title = f"{meal} at {dining_hall}"
     )
     embed.color = discord.Color.from_rgb(255,205,0)
-    location = Location(locationName=location, locationKey=locations.get(location))
+    location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
     if location.closed:
-        await ctx.followup(location + " is closed.")
+        await ctx.followup.send(dining_hall + " is closed")
         return
     mealIndex = location.fetchMealPeriodIndex(meal)
     stalls = location.fetchItemsInPeriod(mealIndex)
@@ -116,4 +211,30 @@ async def cams(ctx, location: str):
             locationWeb = "campus-aerial"
     await ctx.respond(f"https://www.mtu.edu/mtu_resources/php/webcams/cache/{locationWeb}.jpg")
 
+async def waitForDinner():
+    now = datetime.now()
+    while True:
+        if now.hour == 6 + 12 and now.minute in [0, 1, 2]:
+            await sendFamilyDinnerPoll()
+            await asyncio.sleep(23 * 60 * 60)
+        else:
+            await asyncio.sleep(90)
+
+async def postMenus():
+    now = datetime.now()
+    while True:
+        if now.hour in [7, 11, 16, 9] and now.minute in [0, 1, 2, 34]:
+            if now.hour == 7:
+                meal = "Breakfast"
+            elif now.hour == 11:
+                meal = "Lunch"
+            else:
+                meal = "Dinner"
+            await postMenuAtTime(meal)
+            await asyncio.sleep(2 * 60 * 60)
+        else:
+            await asyncio.sleep(5)
+
+#bot.loop.create_task(waitForDinner())
+bot.loop.create_task(postMenus())
 bot.run(os.getenv("TOKEN"))

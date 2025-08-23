@@ -25,14 +25,13 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/jackkroll/DiningBot.git&quot;,
-    &quot;accountId&quot;: &quot;fb23bbea-3f8e-4df8-a51c-422c6f3cc1ef&quot;
+    &quot;accountId&quot;: &quot;54402dde-c1b9-45dc-880c-9f837751edfe&quot;
   }
 }</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
 }</component>
   <component name="ProjectId" id="2rjXZUQENKCshBIYLV3uoSsXLd2" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -80,8 +79,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-76f8388c3a79-JavaScript-PY-243.24978.54" />
-        <option value="bundled-python-sdk-91e3b7efe1d4-466328ff949b-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.24978.54" />
+        <option value="bundled-js-predefined-d6986cc7102b-f27c65a3e318-JavaScript-PY-251.23774.444" />
+        <option value="bundled-python-sdk-890ed5b35930-d9c5bdb153f4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.23774.444" />
       </set>
     </attachedChunks>
   </component>
@@ -95,6 +94,8 @@
       <updated>1737073513487</updated>
       <workItem from="1746395430708" duration="523000" />
       <workItem from="1746397949830" duration="1805000" />
+      <workItem from="1754255451074" duration="3619000" />
+      <workItem from="1755955362375" duration="2290000" />
     </task>
     <task id="LOCAL-00001" summary="Added camera support, untested">
       <option name="closed" value="true" />
@@ -126,6 +127,6 @@
     <option name="LAST_COMMIT_MESSAGE" value="Added camera support, untested" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/DiningBot$main.coverage" NAME="main Coverage Results" MODIFIED="1746400929162" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DiningBot$main.coverage" NAME="main Coverage Results" MODIFIED="1755957626874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
