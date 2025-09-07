@@ -8,7 +8,7 @@ dotenv.load_dotenv()
 bot = discord.Bot()
 
 locations = {"Wads" :"64b9990ec625af0685fb939d", "McNair":"64a6b628351d5305dde2bc08", "DHH" :"64e3da15e45d430b80c9b981"}
-bloat = ["Salad Bar", "Made to Order Deli", "Rice It Up", "Deli", "Salad"]
+bloat = ["Salad Bar", "Made to Order Deli", "Rice It Up", "Deli", "Salad", "House of Green", "Fifth & Fresh"]
 scraper = cloudscraper.create_scraper()
 ua = UserAgent()
 
@@ -73,7 +73,7 @@ def make_scraper_request(url):
     response = scraper.get(url, headers=headers)
     return response
 
-@bot.command(name = "open", guild_ids = [585594090863853588])
+@bot.command(name = "open")
 async def allOpenLocations(ctx):
     await ctx.response.defer()
     diningLocations = []
@@ -92,44 +92,53 @@ async def allOpenLocations(ctx):
     await ctx.followup.send(message)
 
 async def postMenuAtTime(meal):
-    embeds = []
-    for dining_hall in locations.keys():
-        print(dining_hall)
-        embed = discord.Embed(
-            title=f"{meal} at {dining_hall}"
-        )
+    duration = 120 # How long it updates for (minutes)
+    updateFrequency = 5 #Last update time
+    message = None
+    for i in range(0,duration,updateFrequency):
+        embeds = []
+        for dining_hall in locations.keys():
+            print(dining_hall)
+            embed = discord.Embed(
+                title=f"{meal} at {dining_hall}"
+            )
 
-        embed.color = discord.Color.from_rgb(255, 205, 0)
-        location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
-        if location.closed:
-            embed.add_field(name="**Closed**", value=f"Not open for {meal} today")
-            embed.color = discord.Color.red()
+            embed.color = discord.Color.from_rgb(255, 205, 0)
+            location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
+            if location.closed:
+                embed.add_field(name="**Closed**", value=f"Not open for {meal} today")
+                embed.color = discord.Color.red()
+                embeds.append(embed)
+                await asyncio.sleep(5)
+                continue
+            mealIndex = location.fetchMealPeriodIndex(meal)
+            stalls = location.fetchItemsInPeriod(mealIndex)
+            for stall in stalls:
+                if stall[0] in bloat or len(stall[1]) == 0:
+                    continue
+                items = ""
+                for item in stall[1]:
+                    items += f"- {item}\n"
+                embed.add_field(name=stall[0], value=items)
+            now = datetime.now()
+            embed.set_footer(text=f"Last updated: {now.hour}:{now.minute}")
             embeds.append(embed)
             await asyncio.sleep(5)
-            continue
-        mealIndex = location.fetchMealPeriodIndex(meal)
-        stalls = location.fetchItemsInPeriod(mealIndex)
-        for stall in stalls:
-            if stall[0] in bloat or len(stall[1]) == 0:
-                continue
-            items = ""
-            for item in stall[1]:
-                items += f"- {item}\n"
-            embed.add_field(name=stall[0], value=items)
-        embeds.append(embed)
-        await asyncio.sleep(5)
 
-    await bot.wait_until_ready()
-    channel = bot.get_guild(585594090863853588).get_channel(868283438292152372)
-    await channel.send(embeds=embeds)
+        await bot.wait_until_ready()
+        channel = bot.get_guild(1365850565065834566).get_channel(1365851461959024660)
+        if message == None:
+            message = await channel.send(embeds=embeds)
+        else:
+            await message.edit(embeds=embeds)
+        await asyncio.sleep(updateFrequency * 60)
 
 async def sendFamilyDinnerPoll():
     poll = discord.Poll("Family Dinner?", duration=6)
     diningLocations = []
     embeds = []
-    #await bot.fetch_guild(585594090863853588)
     await bot.wait_until_ready()
-    channel = bot.get_guild(585594090863853588).get_channel(868283438292152372)
+    channel = bot.get_guild(1365850565065834566).get_channel(1365851461959024660)
 
     for dining_hall in locations.keys():
         location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
@@ -157,10 +166,9 @@ async def sendFamilyDinnerPoll():
     for location in diningLocations:
         poll.add_answer(text=location.locationName)
     poll.add_answer(text="I'm busy :(")
-
     await channel.send(embeds=embeds, poll=poll)
 
-@bot.command(name= "menu", guild_ids = [585594090863853588])
+@bot.command(name= "menu")
 @discord.option("dining_hall", choices = ["Wads", "McNair", "DHH"])
 @discord.option("meal", choices = ["Breakfast", "Lunch", "Dinner"])
 async def menu(ctx, dining_hall: str, meal: str):
@@ -184,7 +192,7 @@ async def menu(ctx, dining_hall: str, meal: str):
         embed.add_field(name=stall[0], value= items)
     await ctx.followup.send(embed = embed)
 
-@bot.command(name="cams", guild_ids = [585594090863853588])
+@bot.command(name="cams")
 @discord.option("location", choices = ["aerial", "plaza", "midcampus", "walker", "east", "collegeave", "bridge", "portagewest","portageeast",])
 async def cams(ctx, location: str):
 
@@ -221,9 +229,9 @@ async def waitForDinner():
             await asyncio.sleep(90)
 
 async def postMenus():
-    now = datetime.now()
     while True:
-        if now.hour in [7, 11, 16, 9] and now.minute in [0, 1, 2, 34]:
+        now = datetime.now()
+        if now.hour in [7, 11, 17] and now.minute in [0, 1, 2]:
             if now.hour == 7:
                 meal = "Breakfast"
             elif now.hour == 11:
@@ -231,9 +239,8 @@ async def postMenus():
             else:
                 meal = "Dinner"
             await postMenuAtTime(meal)
-            await asyncio.sleep(2 * 60 * 60)
         else:
-            await asyncio.sleep(5)
+            await asyncio.sleep(90)
 
 #bot.loop.create_task(waitForDinner())
 bot.loop.create_task(postMenus())

@@ -79,8 +79,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-f27c65a3e318-JavaScript-PY-251.23774.444" />
-        <option value="bundled-python-sdk-890ed5b35930-d9c5bdb153f4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.23774.444" />
+        <option value="bundled-python-sdk-975db3bf15a3-31b6be0877a2-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-241.18034.82" />
       </set>
     </attachedChunks>
   </component>
@@ -96,6 +95,8 @@
       <workItem from="1746397949830" duration="1805000" />
       <workItem from="1754255451074" duration="3619000" />
       <workItem from="1755955362375" duration="2290000" />
+      <workItem from="1755984465129" duration="4728000" />
+      <workItem from="1755993065374" duration="801000" />
     </task>
     <task id="LOCAL-00001" summary="Added camera support, untested">
       <option name="closed" value="true" />
