@@ -231,7 +231,7 @@ async def waitForDinner():
 async def postMenus():
     while True:
         now = datetime.now()
-        if now.hour in [7, 11, 17] and now.minute in [0, 1, 2]:
+        if now.hour in [7, 11, 18] and now.minute in [0]:
             if now.hour == 7:
                 meal = "Breakfast"
             elif now.hour == 11:
@@ -240,7 +240,7 @@ async def postMenus():
                 meal = "Dinner"
             await postMenuAtTime(meal)
         else:
-            await asyncio.sleep(90)
+            await asyncio.sleep(30)
 
 #bot.loop.create_task(waitForDinner())
 bot.loop.create_task(postMenus())
