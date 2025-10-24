@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="931c5c4e-029b-49c6-946b-af4e0b2a322b" name="Changes" comment="Added camera support, untested">
+    <list default="true" id="931c5c4e-029b-49c6-946b-af4e0b2a322b" name="Changes" comment="Added TZ to docker, worked now :)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -106,7 +106,23 @@
       <option name="project" value="LOCAL" />
       <updated>1746401381524</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Fixed bug preventing posting, added updates every 5 minutes for 2 hours">
+      <option name="closed" value="true" />
+      <created>1757269748847</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1757269748847</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Added TZ to docker, worked now :)">
+      <option name="closed" value="true" />
+      <created>1760581195551</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1760581195553</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -125,7 +141,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added camera support, untested" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added camera support, untested" />
+    <MESSAGE value="Fixed bug preventing posting, added updates every 5 minutes for 2 hours" />
+    <MESSAGE value="Added TZ to docker, worked now :)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added TZ to docker, worked now :)" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/DiningBot$main.coverage" NAME="main Coverage Results" MODIFIED="1755957626874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
