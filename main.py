@@ -133,13 +133,11 @@ async def postMenuAtTime(meal):
                 stalls = location.fetchItemsInPeriod(mealIndex)
             except Exception as e:
                 # Error fetching
-                if message == None:
-                    embed.add_field(name = "Error", value = "There was an issue fetching up to date info, check back soon")
-                else:
-                    now = datetime.now()
-                    embed.set_footer(text=f"Last updated: {now.hour}:{now.minute} (with error)")
-                    embeds.append(embed)
-                    break
+                embed.add_field(name = "Error", value = "There was an issue fetching up to date info, check back soon")
+                now = datetime.now()
+                embed.set_footer(text=f"Last updated: {now.hour}:{now.minute} (with error)")
+                embeds.append(embed)
+                break
             for stall in stalls:
                 if stall[0] in bloat or len(stall[1]) == 0:
                     continue
