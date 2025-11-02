@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="931c5c4e-029b-49c6-946b-af4e0b2a322b" name="Changes" comment="Added TZ to docker, worked now :)">
+    <list default="true" id="931c5c4e-029b-49c6-946b-af4e0b2a322b" name="Changes" comment="Better error recovery">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -122,7 +122,15 @@
       <option name="project" value="LOCAL" />
       <updated>1760581195553</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Better error recovery">
+      <option name="closed" value="true" />
+      <created>1761338704029</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1761338704029</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -143,7 +151,8 @@
     <MESSAGE value="Added camera support, untested" />
     <MESSAGE value="Fixed bug preventing posting, added updates every 5 minutes for 2 hours" />
     <MESSAGE value="Added TZ to docker, worked now :)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added TZ to docker, worked now :)" />
+    <MESSAGE value="Better error recovery" />
+    <option name="LAST_COMMIT_MESSAGE" value="Better error recovery" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/DiningBot$main.coverage" NAME="main Coverage Results" MODIFIED="1755957626874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

@@ -26,13 +26,24 @@ class Location:
         self.locationKey = locationKey
         self.periods = []
         self.closed = False
+        self.error = False
         self.updatePeriods()
 
     def updatePeriods(self):
+        remainingAttempts = 3
         date_today = datetime.now(timezone(timedelta(hours=-4))).strftime('%Y-%m-%d')
-        info = make_scraper_request(
-            f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods?platform=0&date={date_today}")
-        info = info.json()
+        while remainingAttempts > 0:
+            try:
+                info = make_scraper_request(
+                f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods?platform=0&date={date_today}")
+                info = info.json()
+            except Exception as e:
+                remainingAttempts -= 1
+        if remainingAttempts <= 0:
+            self.closed = True
+            self.error = True
+            return
+        self.error = False
         try:
             for period in info["periods"]:
                 newPeriod = Period(period["name"], period["id"])
@@ -105,7 +116,13 @@ async def postMenuAtTime(meal):
 
             embed.color = discord.Color.from_rgb(255, 205, 0)
             location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
-            if location.closed:
+            if location.error:
+                embed.add_field(name="**Error**", value=f"There was an issue fetching {meal}, check back soon")
+                embed.color = discord.Color.red()
+                embeds.append(embed)
+                await asyncio.sleep(5)
+                continue
+            elif location.closed:
                 embed.add_field(name="**Closed**", value=f"Not open for {meal} today")
                 embed.color = discord.Color.red()
                 embeds.append(embed)
