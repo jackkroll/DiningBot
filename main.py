@@ -1,4 +1,4 @@
-import asyncio
+import asyncio, random
 from operator import truediv
 
 import cloudscraper,dotenv,os, discord
@@ -332,17 +332,14 @@ async def postMenus():
 
 async def rotateStatus():
     await bot.wait_until_ready()
-    index = 0
     while True:
         if not status_texts:
             await asyncio.sleep(status_rotate_seconds)
             continue
-        text = status_texts[index % len(status_texts)]
+        text = random.choice(status_texts)
         await bot.change_presence(activity=discord.Game(name=text))
-        index += 1
         await asyncio.sleep(status_rotate_seconds)
 
-#bot.loop.create_task(waitForDinner())
 bot.loop.create_task(postMenus())
 bot.loop.create_task(rotateStatus())
 bot.run(os.getenv("TOKEN"))
