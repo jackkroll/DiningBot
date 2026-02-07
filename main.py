@@ -12,6 +12,17 @@ bloat = ["Salad Bar", "Made to Order Deli", "Rice It Up", "Deli", "Salad", "Hous
 scraper = cloudscraper.create_scraper()
 ua = UserAgent()
 
+status_texts = [
+    "pork cheddarwurst <3",
+    "I <3 dining hall slop",
+    "Adding more hot dogs to the menu",
+    "Stealing forks",
+    "Increasing meal plan costs",
+    "Rethinking my drink rn",
+    "Adding the orange spice liquid to all menu items...",
+    "Observing the black goo leaking from the ceiling..."
+]
+status_rotate_seconds = 60 * 5
 
 class Period:
     def __init__(self, periodName, periodKey):
@@ -27,20 +38,27 @@ class Location:
         self.periods = []
         self.closed = False
         self.error = False
-        self.updatePeriods()
+        try:
+            self.updatePeriods()
+        except Exception:
+            self.error = True
 
     def updatePeriods(self):
         remainingAttempts = 3
         date_today = datetime.now(timezone(timedelta(hours=-4))).strftime('%Y-%m-%d')
+        info = None
         while remainingAttempts > 0:
             try:
-                info = make_scraper_request(
-                f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods?platform=0&date={date_today}")
-                info = info.json()
-            except Exception as e:
+                response = make_scraper_request(
+                    f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods?platform=0&date={date_today}"
+                )
+                info = response.json()
+                break
+            except Exception:
                 remainingAttempts -= 1
-        if remainingAttempts <= 0:
-            self.closed = True
+                if remainingAttempts > 0:
+                    continue
+        if info is None:
             self.error = True
             return
         self.error = False
@@ -62,9 +80,13 @@ class Location:
         return -1
 
     def fetchPeriod(self, index):
+        if index < 0 or index >= len(self.periods):
+            raise ValueError("Invalid meal period index")
         date_today = datetime.now(timezone(timedelta(hours=-4))).strftime('%Y-%m-%d')
-        info = make_scraper_request(
-                f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods/{self.periods[index].fetchPeriodKey()}?platform=0&date={date_today}").json()
+        response = make_scraper_request(
+            f"https://api.dineoncampus.com/v1/location/{self.locationKey}/periods/{self.periods[index].fetchPeriodKey()}?platform=0&date={date_today}"
+        )
+        info = response.json()
         return info
 
     def fetchItemsInPeriod(self, index):
@@ -78,10 +100,17 @@ class Location:
             stalls.append((stallName, items))
         return stalls
 
+    async def fetchItemsInPeriodAsync(self, index):
+        return await asyncio.to_thread(self.fetchItemsInPeriod, index)
+
+
+async def create_location(location_name, location_key):
+    return await asyncio.to_thread(Location, location_name, location_key)
 
 def make_scraper_request(url):
     headers = {"User-Agent" : ua.random}
-    response = scraper.get(url, headers=headers)
+    response = scraper.get(url, headers=headers, timeout=(5, 20))
+    response.raise_for_status()
     return response
 
 @bot.command(name = "open")
@@ -89,11 +118,14 @@ async def allOpenLocations(ctx):
     await ctx.response.defer()
     diningLocations = []
     for dining_hall in locations.keys():
-        diningLocations.append(Location(locationName=dining_hall, locationKey=locations.get(dining_hall)))
+        diningLocations.append(await create_location(location_name=dining_hall, location_key=locations.get(dining_hall)))
     message = ""
     allOpen = True
     for location in diningLocations:
-        if location.closed:
+        if location.error:
+            allOpen = False
+            message += f"**{location.locationName}** status **unknown** (error fetching) ⚠️\n"
+        elif location.closed:
             allOpen = False
             message += f"**{location.locationName}** is currently **closed** ❌\n"
         else:
@@ -106,6 +138,7 @@ async def postMenuAtTime(meal):
     duration = 120 # How long it updates for (minutes)
     updateFrequency = 5 #Last update time
     message = None
+    last_successful = {}
     for i in range(0,duration,updateFrequency):
         embeds = []
         for dining_hall in locations.keys():
@@ -115,11 +148,19 @@ async def postMenuAtTime(meal):
             )
 
             embed.color = discord.Color.from_rgb(255, 205, 0)
-            location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
+            location = await create_location(location_name=dining_hall, location_key=locations.get(dining_hall))
             if location.error:
-                embed.add_field(name="**Error**", value=f"There was an issue fetching {meal}, check back soon")
-                embed.color = discord.Color.red()
-                embeds.append(embed)
+                cached = last_successful.get(dining_hall)
+                if cached is not None:
+                    stale_embed = discord.Embed.from_dict(cached["embed"].to_dict())
+                    stale_embed.set_footer(
+                        text=f"{cached['updated_text']} — Warning: refresh failed; menu may be outdated"
+                    )
+                    embeds.append(stale_embed)
+                else:
+                    embed.add_field(name="**Error**", value=f"There was an issue fetching {meal}, check back soon")
+                    embed.color = discord.Color.red()
+                    embeds.append(embed)
                 await asyncio.sleep(5)
                 continue
             elif location.closed:
@@ -130,14 +171,21 @@ async def postMenuAtTime(meal):
                 continue
             try:
                 mealIndex = location.fetchMealPeriodIndex(meal)
-                stalls = location.fetchItemsInPeriod(mealIndex)
+                stalls = await location.fetchItemsInPeriodAsync(mealIndex)
             except Exception as e:
-                # Error fetching
-                embed.add_field(name = "Error", value = "There was an issue fetching up to date info, check back soon")
-                now = datetime.now()
-                embed.set_footer(text=f"Last updated: {now.hour}:{now.minute} (with error)")
-                embeds.append(embed)
-                break
+                cached = last_successful.get(dining_hall)
+                if cached is not None:
+                    stale_embed = discord.Embed.from_dict(cached["embed"].to_dict())
+                    stale_embed.set_footer(
+                        text=f"{cached['updated_text']} — Warning: refresh failed; menu may be outdated"
+                    )
+                    embeds.append(stale_embed)
+                else:
+                    embed.add_field(name = "Error", value = "There was an issue fetching up to date info, check back soon")
+                    now = datetime.now()
+                    embed.set_footer(text=f"Last updated: {now.hour}:{now.minute} (with error)")
+                    embeds.append(embed)
+                continue
             for stall in stalls:
                 if stall[0] in bloat or len(stall[1]) == 0:
                     continue
@@ -146,8 +194,10 @@ async def postMenuAtTime(meal):
                     items += f"- {item}\n"
                 embed.add_field(name=stall[0], value=items)
             now = datetime.now()
-            embed.set_footer(text=f"Last updated: {now.hour}:{now.minute}")
+            updated_text = f"Last updated: {now.hour}:{now.minute}"
+            embed.set_footer(text=updated_text)
             embeds.append(embed)
+            last_successful[dining_hall] = {"embed": embed, "updated_text": updated_text}
             await asyncio.sleep(5)
 
         await bot.wait_until_ready()
@@ -166,7 +216,9 @@ async def sendFamilyDinnerPoll():
     channel = bot.get_guild(1365850565065834566).get_channel(1365851461959024660)
 
     for dining_hall in locations.keys():
-        location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
+        location = await create_location(location_name=dining_hall, location_key=locations.get(dining_hall))
+        if location.error:
+            continue
         if not location.closed:
             for period in location.periods:
                 if period.periodName == "Dinner":
@@ -176,7 +228,7 @@ async def sendFamilyDinnerPoll():
                     )
                     embed.color = discord.Color.from_rgb(255, 205, 0)
                     mealIndex = location.fetchMealPeriodIndex("Dinner")
-                    stalls = location.fetchItemsInPeriod(mealIndex)
+                    stalls = await location.fetchItemsInPeriodAsync(mealIndex)
                     for stall in stalls:
                         if stall[0] in bloat or len(stall[1]) == 0:
                             continue
@@ -202,12 +254,19 @@ async def menu(ctx, dining_hall: str, meal: str):
         title = f"{meal} at {dining_hall}"
     )
     embed.color = discord.Color.from_rgb(255,205,0)
-    location = Location(locationName=dining_hall, locationKey=locations.get(dining_hall))
+    location = await create_location(location_name=dining_hall, location_key=locations.get(dining_hall))
+    if location.error:
+        await ctx.followup.send(f"There was an issue fetching {dining_hall} right now, check back soon")
+        return
     if location.closed:
         await ctx.followup.send(dining_hall + " is closed")
         return
     mealIndex = location.fetchMealPeriodIndex(meal)
-    stalls = location.fetchItemsInPeriod(mealIndex)
+    try:
+        stalls = await location.fetchItemsInPeriodAsync(mealIndex)
+    except ValueError:
+        await ctx.followup.send(f"{dining_hall} is not serving {meal} right now")
+        return
     for stall in stalls:
         if stall[0] in bloat or len(stall[1]) == 0:
             continue
@@ -263,10 +322,27 @@ async def postMenus():
                 meal = "Lunch"
             else:
                 meal = "Dinner"
-            await postMenuAtTime(meal)
+            try:
+                await postMenuAtTime(meal)
+            except Exception as e:
+                print(f"postMenuAtTime failed: {e}")
+                await asyncio.sleep(60)
         else:
             await asyncio.sleep(30)
 
+async def rotateStatus():
+    await bot.wait_until_ready()
+    index = 0
+    while True:
+        if not status_texts:
+            await asyncio.sleep(status_rotate_seconds)
+            continue
+        text = status_texts[index % len(status_texts)]
+        await bot.change_presence(activity=discord.Game(name=text))
+        index += 1
+        await asyncio.sleep(status_rotate_seconds)
+
 #bot.loop.create_task(waitForDinner())
 bot.loop.create_task(postMenus())
+bot.loop.create_task(rotateStatus())
 bot.run(os.getenv("TOKEN"))
